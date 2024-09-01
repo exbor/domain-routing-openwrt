@@ -6,6 +6,79 @@ ip route add table vpn default dev wg0
 EOF
 }
 
+# remove_forwarding() {
+#     if [ ! -z "$forward_id" ]; then
+#         while uci -q delete firewall.@forwarding[$forward_id]; do :; done
+#     fi
+# }
+
+add_zone() {
+    if uci show firewall | grep -q "@zone.*name='wg'"; then
+        printf "\033[32;1mZone already exist\033[0m\n"
+    else
+        printf "\033[32;1mCreate zone\033[0m\n"
+
+        zone_wg_id=$(uci show firewall | grep -E '@zone.*wg0' | awk -F '[][{}]' '{print $2}' | head -n 1)
+        if [ "$zone_wg_id" == 0 ] || [ "$zone_wg_id" == 1 ]; then
+            printf "\033[32;1mwg0 zone has an identifier of 0 or 1. That's not ok. Fix your firewall. lan and wan zones should have identifiers 0 and 1. \033[0m\n"
+            exit 1
+        fi
+        if [ ! -z "$zone_wg_id" ]; then
+            while uci -q delete firewall.@zone[$zone_wg_id]; do :; done
+        fi
+
+        uci add firewall zone
+        uci set firewall.@zone[-1].name="wg"
+        uci set firewall.@zone[-1].network='wg0'
+        uci set firewall.@zone[-1].forward='REJECT'
+        uci set firewall.@zone[-1].output='ACCEPT'
+        uci set firewall.@zone[-1].input='REJECT'
+        uci set firewall.@zone[-1].masq='1'
+        uci set firewall.@zone[-1].mtu_fix='1'
+        uci set firewall.@zone[-1].family='ipv4'
+        uci commit firewall
+    fi
+    
+    if uci show firewall | grep -q "@forwarding.*name='wg-lan'"; then
+        printf "\033[32;1mForwarding already configured\033[0m\n"
+    else
+        printf "\033[32;1mConfigured forwarding\033[0m\n"
+        # Delete exists forwarding
+        # if [[ $TUNNEL != "wg" ]]; then
+        #     forward_id=$(uci show firewall | grep -E "@forwarding.*dest='wg'" | awk -F '[][{}]' '{print $2}' | head -n 1)
+        #     remove_forwarding
+        # fi
+
+        # if [[ $TUNNEL != "awg" ]]; then
+        #     forward_id=$(uci show firewall | grep -E "@forwarding.*dest='awg'" | awk -F '[][{}]' '{print $2}' | head -n 1)
+        #     remove_forwarding
+        # fi
+
+        # if [[ $TUNNEL != "ovpn" ]]; then
+        #     forward_id=$(uci show firewall | grep -E "@forwarding.*dest='ovpn'" | awk -F '[][{}]' '{print $2}' | head -n 1)
+        #     remove_forwarding
+        # fi
+
+        # if [[ $TUNNEL != "singbox" ]]; then
+        #     forward_id=$(uci show firewall | grep -E "@forwarding.*dest='singbox'" | awk -F '[][{}]' '{print $2}' | head -n 1)
+        #     remove_forwarding
+        # fi
+
+        # if [[ $TUNNEL != "tun2socks" ]]; then
+        #     forward_id=$(uci show firewall | grep -E "@forwarding.*dest='tun2socks'" | awk -F '[][{}]' '{print $2}' | head -n 1)
+        #     remove_forwarding
+        # fi
+
+        uci add firewall forwarding
+        uci set firewall.@forwarding[-1]=forwarding
+        uci set firewall.@forwarding[-1].name="wg-lan"
+        uci set firewall.@forwarding[-1].dest="wg"
+        uci set firewall.@forwarding[-1].src='lan'
+        uci set firewall.@forwarding[-1].family='ipv4'
+        uci commit firewall
+    fi
+}
+
 add_wg() {
     printf "\033[32;1mConfigure WireGuard\033[0m\n"
     if opkg list-installed | grep -q wireguard-tools; then
@@ -60,6 +133,8 @@ add_wg() {
 }
 
 add_wg
+
+add_zone
 
 printf "\033[32;1mRestart network\033[0m\n"
 /etc/init.d/network restart
