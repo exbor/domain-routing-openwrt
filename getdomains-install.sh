@@ -691,11 +691,11 @@ add_getdomains() {
     done
 
     if [ "$COUNTRY" == 'russia_inside' ]; then
-        EOF_DOMAINS=DOMAINS=https://raw.githubusercontent.com/itdoginfo/allow-domains/main/Russia/inside-dnsmasq-nfset.lst
+        EOF_DOMAINS=DOMAINS=https://raw.githubusercontent.com/exbor/allow-domains/main/Russia/inside-dnsmasq-nfset.lst
     elif [ "$COUNTRY" == 'russia_outside' ]; then
-        EOF_DOMAINS=DOMAINS=https://raw.githubusercontent.com/itdoginfo/allow-domains/main/Russia/outside-dnsmasq-nfset.lst
+        EOF_DOMAINS=DOMAINS=https://raw.githubusercontent.com/exbor/allow-domains/main/Russia/outside-dnsmasq-nfset.lst
     elif [ "$COUNTRY" == 'ukraine' ]; then
-        EOF_DOMAINS=DOMAINS=https://raw.githubusercontent.com/itdoginfo/allow-domains/main/Ukraine/inside-dnsmasq-nfset.lst
+        EOF_DOMAINS=DOMAINS=https://raw.githubusercontent.com/exbor/allow-domains/main/Ukraine/inside-dnsmasq-nfset.lst
     fi
 
     if [ "$COUNTRY" != '0' ]; then
@@ -903,7 +903,7 @@ VERSION_ID=$(grep VERSION_ID /etc/os-release | awk -F '"' '{print $2}' | awk -F.
 if [ "$VERSION_ID" -ne 23 ]; then
     printf "\033[31;1mScript only support OpenWrt 23.05\033[0m\n"
     echo "For OpenWrt 21.02 and 22.03 you can:"
-    echo "1) Use ansible https://github.com/itdoginfo/domain-routing-openwrt"
+    echo "1) Use ansible https://github.com/exbor/domain-routing-openwrt"
     echo "2) Configure manually. Old manual: https://itdog.info/tochechnaya-marshrutizaciya-na-routere-s-openwrt-wireguard-i-dnscrypt/"
     exit 1
 fi
